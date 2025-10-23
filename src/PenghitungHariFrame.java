@@ -11,7 +11,7 @@ import javax.swing.*;
 import java.time.*;
 import java.time.format.TextStyle;
 import java.util.*;
-import javax.swing.JOptionPane;
+import java.time.temporal.ChronoUnit;
 public class PenghitungHariFrame extends javax.swing.JFrame {
 
     /**
@@ -20,16 +20,28 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
     public PenghitungHariFrame() {
         initComponents();
         setLocationRelativeTo(null);
+        getContentPane().setBackground(new java.awt.Color(52, 73, 94));
         txtHasil.setEditable(false);
-    
-        // Spinner default (tahun saat ini)
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        spnTahun.setValue(cal.get(java.util.Calendar.YEAR));
-        
-        // Mengatur tampilan awal combo box bulan
-        cmbBulan.setSelectedIndex(0);
+        ((JSpinner.NumberEditor) spnTahun.getEditor()).getFormat().applyPattern("####");
 
+        // Inisialisasi awal
+        Calendar cal = Calendar.getInstance();
+        spnTahun.setValue(cal.get(Calendar.YEAR));
+        cmbBulan.setSelectedIndex(0);
+        kalender1.setCalendar(cal);
+        kalender2.setCalendar(cal);
+
+        // --- Event Listeners ---
+        cmbBulan.addActionListener(e -> updateKalenderDariCombo());
+        spnTahun.addChangeListener(e -> updateKalenderDariCombo());
+        kalender1.addPropertyChangeListener("calendar", e -> updateComboDariKalender());
+
+        btnHitung.addActionListener(e -> hitungHari());
+        btnSelisih.addActionListener(e -> hitungSelisih());
+        btnHapus.addActionListener(e -> hapusData());
+        btnKeluar.addActionListener(e -> keluarAplikasi());
     }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -49,11 +61,11 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
         lblHari = new javax.swing.JLabel();
         scrlHasil = new javax.swing.JScrollPane();
         txtHasil = new javax.swing.JTextArea();
-        kalender1 = new com.toedter.calendar.JCalendar();
+        kalender2 = new com.toedter.calendar.JCalendar();
         btnHitung = new javax.swing.JButton();
         btnHapus = new javax.swing.JButton();
         btnKeluar = new javax.swing.JButton();
-        kalender2 = new com.toedter.calendar.JCalendar();
+        kalender1 = new com.toedter.calendar.JCalendar();
         btnSelisih = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
@@ -87,30 +99,15 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
         btnHitung.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnHitung.setForeground(new java.awt.Color(255, 255, 255));
         btnHitung.setText("HITUNG");
-        btnHitung.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnHitungActionPerformed(evt);
-            }
-        });
 
         btnHapus.setBackground(new java.awt.Color(255, 255, 0));
         btnHapus.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnHapus.setText("HAPUS");
-        btnHapus.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnHapusActionPerformed(evt);
-            }
-        });
 
         btnKeluar.setBackground(new java.awt.Color(204, 0, 0));
         btnKeluar.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
         btnKeluar.setForeground(new java.awt.Color(255, 255, 255));
         btnKeluar.setText("KELUAR");
-        btnKeluar.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnKeluarActionPerformed(evt);
-            }
-        });
 
         btnSelisih.setBackground(new java.awt.Color(0, 102, 255));
         btnSelisih.setFont(new java.awt.Font("Segoe UI", 1, 12)); // NOI18N
@@ -152,8 +149,8 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
                                     .addComponent(spnTahun, javax.swing.GroupLayout.Alignment.TRAILING))))
                         .addGap(18, 18, 18)
                         .addGroup(panelHitungHariLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addComponent(kalender1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(kalender2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(kalender2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(kalender1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                     .addGroup(panelHitungHariLayout.createSequentialGroup()
                         .addGap(156, 156, 156)
                         .addComponent(lblJudul)))
@@ -183,7 +180,7 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
                         .addComponent(lblHari)
                         .addGap(18, 18, 18))
                     .addGroup(panelHitungHariLayout.createSequentialGroup()
-                        .addComponent(kalender2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(kalender1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addGroup(panelHitungHariLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(panelHitungHariLayout.createSequentialGroup()
@@ -192,7 +189,7 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
                         .addGroup(panelHitungHariLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(btnHapus)
                             .addComponent(btnKeluar)))
-                    .addComponent(kalender1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(kalender2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(20, 20, 20))
         );
 
@@ -214,68 +211,102 @@ public class PenghitungHariFrame extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+    
+    private void updateKalenderDariCombo() {
+    int bulan = cmbBulan.getSelectedIndex();
+    if (bulan <= 0) return;
+    int tahun = (int) spnTahun.getValue();
+    Calendar cal = Calendar.getInstance();
+    cal.set(tahun, bulan - 1, kalender1.getCalendar().get(Calendar.DAY_OF_MONTH));
+    kalender1.setCalendar(cal);
+}
 
-    private void btnHitungActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHitungActionPerformed
-        try {
-            int tahun = (int) spnTahun.getValue();
-            int bulan = cmbBulan.getSelectedIndex();
+    private void updateComboDariKalender() {
+        Calendar cal = kalender1.getCalendar();
+        cmbBulan.setSelectedIndex(cal.get(Calendar.MONTH) + 1);
+        spnTahun.setValue(cal.get(Calendar.YEAR));
+    }
 
-            if (bulan <= 0) {
-                JOptionPane.showMessageDialog(this, "Silakan pilih bulan terlebih dahulu!",
-                        "Peringatan", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
+    // --- Fungsi utama ---
+    private void hitungHari() {
+        int bulan = cmbBulan.getSelectedIndex();
+        if (bulan <= 0) {
+            JOptionPane.showMessageDialog(this, "Pilih bulan terlebih dahulu!");
+            return;
+        }
+        int tahun = (int) spnTahun.getValue();
+        YearMonth ym = YearMonth.of(tahun, bulan);
+        int jmlHari = ym.lengthOfMonth();
+        LocalDate awal = LocalDate.of(tahun, bulan, 1);
+        LocalDate akhir = LocalDate.of(tahun, bulan, jmlHari);
 
-            // Menggunakan Java Time API (YearMonth & LocalDate)
-            java.time.YearMonth yearMonth = java.time.YearMonth.of(tahun, bulan);
-            int jumlahHari = yearMonth.lengthOfMonth();
+        String hariAwal = awal.getDayOfWeek().getDisplayName(TextStyle.FULL, new Locale("id", "ID"));
+        String hariAkhir = akhir.getDayOfWeek().getDisplayName(TextStyle.FULL, new Locale("id", "ID"));
+        String infoKabisat = Year.isLeap(tahun) ? "(Tahun Kabisat)" : "(Bukan Tahun Kabisat)";
 
-            java.time.LocalDate tanggalAwal = java.time.LocalDate.of(tahun, bulan, 1);
-            java.time.LocalDate tanggalAkhir = java.time.LocalDate.of(tahun, bulan, jumlahHari);
+        txtHasil.setText(
+            "Bulan: " + cmbBulan.getSelectedItem() + " " + tahun + " " + infoKabisat + "\n" +
+            "Jumlah Hari: " + jmlHari + "\n" +
+            "Hari Pertama: " + hariAwal + "\n" +
+            "Hari Terakhir: " + hariAkhir
+        );
+    }
 
-            String hariAwal = tanggalAwal.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, new java.util.Locale("id", "ID"));
-            String hariAkhir = tanggalAkhir.getDayOfWeek().getDisplayName(java.time.format.TextStyle.FULL, new java.util.Locale("id", "ID"));
-
-            // Menampilkan hasil di TextArea
-            txtHasil.setText("Bulan: " + cmbBulan.getSelectedItem() + " " + tahun + "\n" +
-                             "Jumlah Hari: " + jumlahHari + "\n" +
-                             "Hari Pertama: " + hariAwal + "\n" +
-                             "Hari Terakhir: " + hariAkhir);
-
-            // Sinkronisasi dengan JCalendar
-            java.util.Calendar cal = java.util.Calendar.getInstance();
-            cal.set(java.util.Calendar.YEAR, tahun);
-            cal.set(java.util.Calendar.MONTH, bulan - 1); // Karena bulan di Calendar mulai dari 0
-            cal.set(java.util.Calendar.DAY_OF_MONTH, 1);
-            kalender1.setCalendar(cal);
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Terjadi kesalahan perhitungan!",
-                    "Error", JOptionPane.ERROR_MESSAGE);
+    private void hitungSelisih() {
+        Date tgl1 = kalender1.getDate();
+        Date tgl2 = kalender2.getDate();
+        if (tgl1 == null || tgl2 == null) {
+            JOptionPane.showMessageDialog(this, "Pilih dua tanggal terlebih dahulu!");
+            return;
         }
 
-    }//GEN-LAST:event_btnHitungActionPerformed
+        // Konversi Date ke LocalDate agar mudah diformat
+        LocalDate tanggal1 = tgl1.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate tanggal2 = tgl2.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-    private void btnHapusActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnHapusActionPerformed
-        cmbBulan.setSelectedIndex(0);
-        txtHasil.setText("");
-        java.util.Calendar cal = java.util.Calendar.getInstance();
-        spnTahun.setValue(cal.get(java.util.Calendar.YEAR));
-        kalender1.setCalendar(cal);
-    }//GEN-LAST:event_btnHapusActionPerformed
+        // Hitung selisih hari absolut
+        long selisihHari = Math.abs(ChronoUnit.DAYS.between(tanggal1, tanggal2));
 
-    private void btnKeluarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnKeluarActionPerformed
-        int pilih = JOptionPane.showConfirmDialog(this,
-                "Apakah Anda yakin ingin keluar dari aplikasi?",
-                "Konfirmasi Keluar",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE);
-        if (pilih == JOptionPane.YES_OPTION) {
-            JOptionPane.showMessageDialog(this, "Terima kasih telah menggunakan aplikasi ini!");
+        // Format tanggal ke gaya Indonesia
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", new Locale("id", "ID"));
+
+        // Tampilkan hasil lebih informatif
+        txtHasil.setText(
+            "Tanggal pertama: " + tanggal1.format(fmt) + "\n" +
+            "Tanggal kedua:   " + tanggal2.format(fmt) + "\n" +
+            "Selisih antara dua tanggal: " + selisihHari + " hari"
+        );
+    }
+
+    private void hapusData() {
+        int konfirmasi = JOptionPane.showConfirmDialog(
+            this,
+            "Apakah Anda yakin ingin menghapus data?",
+            "Konfirmasi Hapus",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE
+        );
+
+        if (konfirmasi == JOptionPane.YES_OPTION) {
+            cmbBulan.setSelectedIndex(0);
+            spnTahun.setValue(2025);
+            Calendar now = Calendar.getInstance();
+            kalender1.setCalendar(now);
+            kalender2.setCalendar(now);
+            txtHasil.setText("");
+            cmbBulan.setSelectedIndex(0);
+            
+            JOptionPane.showMessageDialog(this, "Data berhasil dihapus!", "Informasi", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    private void keluarAplikasi() {
+        if (JOptionPane.showConfirmDialog(this, "Yakin ingin keluar?", "Konfirmasi", JOptionPane.YES_NO_OPTION)
+                == JOptionPane.YES_OPTION) {
+            JOptionPane.showMessageDialog(this, "Terima kasih telah menggunakan aplikasi!");
             System.exit(0);
         }
-    }//GEN-LAST:event_btnKeluarActionPerformed
-
+    }
     /**
      * @param args the command line arguments
      */
